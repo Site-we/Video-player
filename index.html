@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Video Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        #video-container {
+            position: relative;
+            max-width: 800px;
+            margin: auto;
+            background: black;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        video {
+            width: 100%;
+            border-radius: 10px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        input[type="range"] {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="video-container">
+        <video id="videoPlayer" controls>
+            Your browser does not support the video tag.
+        </video>
+        <div class="controls">
+            <button onclick="playPause()">Play/Pause</button>
+            <button onclick="skip(-10)"><< 10s</button>
+            <button onclick="skip(10)">10s >></button>
+            <input type="range" id="seekBar" value="0" step="1" onchange="seekVideo()">
+            <label>Speed: <select id="speedControl" onchange="changeSpeed()">
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+            </select></label>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.1" onchange="changeVolume()">
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('videoPlayer');
+        const seekBar = document.getElementById('seekBar');
+        const volumeControl = document.getElementById('volumeControl');
+
+        function getVideoUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('video') || '';
+        }
+
+        function playPause() {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+
+        function skip(seconds) {
+            video.currentTime += seconds;
+        }
+
+        function seekVideo() {
+            video.currentTime = seekBar.value;
+        }
+
+        function changeSpeed() {
+            video.playbackRate = document.getElementById('speedControl').value;
+        }
+
+        function changeVolume() {
+            video.volume = volumeControl.value;
+        }
+
+        video.addEventListener('timeupdate', () => {
+            seekBar.value = video.currentTime;
+            seekBar.max = video.duration;
+        });
+
+        const videoUrl = getVideoUrl();
+        if (videoUrl) {
+            video.src = videoUrl;
+        } else {
+            alert('No video URL provided in query.');
+        }
+    </script>
+
+</body>
+</html>
