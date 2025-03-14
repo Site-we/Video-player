@@ -44,6 +44,7 @@
             justify-content: center;
             cursor: pointer;
             transition: opacity 0.3s;
+            z-index: 2;
         }
 
         #controls {
@@ -71,6 +72,7 @@
             height: 100%;
             display: flex;
             justify-content: space-between;
+            z-index: 1;
         }
 
         .gesture-area {
@@ -95,9 +97,7 @@
 <body>
 
     <div id="video-container">
-        <video id="videoPlayer" playsinline>
-            Your browser does not support video.
-        </video>
+        <video id="videoPlayer" playsinline></video>
 
         <button id="playButton">▶</button>
 
@@ -128,7 +128,8 @@
         }
 
         video.src = getVideoUrl();
-        
+        video.controls = false; 
+
         playButton.addEventListener('click', () => {
             if (video.paused) {
                 video.play();
