@@ -27,7 +27,7 @@
             display: block;
         }
 
-        #playButton {
+        #playPauseButton {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -53,10 +53,11 @@
             width: 100%;
             display: none;
             transition: opacity 0.3s;
+            text-align: center;
         }
 
         #seekBar {
-            width: 100%;
+            width: 90%;
             appearance: none;
             background: rgba(255, 255, 255, 0.7);
             height: 5px;
@@ -99,7 +100,7 @@
     <div id="video-container">
         <video id="videoPlayer" playsinline></video>
 
-        <button id="playButton">▶</button>
+        <button id="playPauseButton">▶</button>
 
         <div id="controls">
             <input type="range" id="seekBar" value="0" step="1">
@@ -115,11 +116,9 @@
 
     <script>
         const video = document.getElementById('videoPlayer');
-        const playButton = document.getElementById('playButton');
+        const playPauseButton = document.getElementById('playPauseButton');
         const seekBar = document.getElementById('seekBar');
         const controls = document.getElementById('controls');
-        const brightnessControl = document.getElementById('brightnessControl');
-        const volumeControl = document.getElementById('volumeControl');
         const feedback = document.getElementById('feedback');
 
         function getVideoUrl() {
@@ -128,20 +127,29 @@
         }
 
         video.src = getVideoUrl();
-        video.controls = false; 
+        video.controls = false;  
 
-        playButton.addEventListener('click', () => {
+        playPauseButton.addEventListener('click', () => {
             if (video.paused) {
                 video.play();
-                playButton.style.display = 'none';
+                playPauseButton.innerText = '❚❚'; 
+                hideControls();
             } else {
                 video.pause();
-                playButton.style.display = 'flex';
+                playPauseButton.innerText = '▶'; 
+                showControls();
             }
         });
 
-        video.addEventListener('play', () => playButton.style.display = 'none');
-        video.addEventListener('pause', () => playButton.style.display = 'flex');
+        video.addEventListener('play', () => {
+            playPauseButton.innerText = '❚❚';
+            hideControls();
+        });
+
+        video.addEventListener('pause', () => {
+            playPauseButton.innerText = '▶';
+            showControls();
+        });
 
         video.addEventListener('timeupdate', () => {
             seekBar.value = video.currentTime;
@@ -153,13 +161,21 @@
         });
 
         let controlTimeout;
-        video.addEventListener('click', () => {
+        function showControls() {
             controls.style.display = 'block';
+            playPauseButton.style.display = 'flex';
             clearTimeout(controlTimeout);
-            controlTimeout = setTimeout(() => {
+            controlTimeout = setTimeout(hideControls, 3000);
+        }
+
+        function hideControls() {
+            if (!video.paused) {
                 controls.style.display = 'none';
-            }, 3000);
-        });
+                playPauseButton.style.display = 'none';
+            }
+        }
+
+        video.addEventListener('click', showControls);
 
         let startY, startX;
         let isBrightness = false;
