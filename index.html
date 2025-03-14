@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Video Player</title>
+    <title>Custom Video Player</title>
     <style>
         body {
             margin: 0;
-            background: black;
+            background: #222;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -18,13 +18,18 @@
 
         #video-container {
             position: relative;
-            width: 100%;
-            max-width: 800px;
+            width: 90%;
+            max-width: 500px;
+            background: black;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
         video {
             width: 100%;
             display: block;
+            border-radius: 10px;
         }
 
         #playPauseButton {
@@ -49,8 +54,10 @@
 
         #controls {
             position: absolute;
-            bottom: 10px;
+            bottom: 0;
             width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
             display: none;
             transition: opacity 0.3s;
             text-align: center;
@@ -59,7 +66,7 @@
         #seekBar {
             width: 90%;
             appearance: none;
-            background: rgba(255, 255, 255, 0.7);
+            background: #fff;
             height: 5px;
             border-radius: 5px;
             cursor: pointer;
@@ -87,10 +94,10 @@
             left: 50%;
             transform: translate(-50%, -50%);
             color: white;
-            font-size: 24px;
+            font-size: 20px;
             background: rgba(0, 0, 0, 0.5);
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 10px 15px;
+            border-radius: 5px;
             display: none;
         }
     </style>
@@ -120,6 +127,7 @@
         const seekBar = document.getElementById('seekBar');
         const controls = document.getElementById('controls');
         const feedback = document.getElementById('feedback');
+        const videoContainer = document.getElementById('video-container');
 
         function getVideoUrl() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -127,16 +135,16 @@
         }
 
         video.src = getVideoUrl();
-        video.controls = false;  
+        video.controls = false;
 
         playPauseButton.addEventListener('click', () => {
             if (video.paused) {
                 video.play();
-                playPauseButton.innerText = '❚❚'; 
+                playPauseButton.innerText = '❚❚';
                 hideControls();
             } else {
                 video.pause();
-                playPauseButton.innerText = '▶'; 
+                playPauseButton.innerText = '▶';
                 showControls();
             }
         });
@@ -175,24 +183,24 @@
             }
         }
 
-        video.addEventListener('click', showControls);
+        videoContainer.addEventListener('click', showControls);
 
         let startY, startX;
         let isBrightness = false;
         let isVolume = false;
-        let brightness = 1; 
+        let brightness = 1;
         let volume = video.volume;
 
-        document.addEventListener('touchstart', (e) => {
+        videoContainer.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
             startX = e.touches[0].clientX;
-            isBrightness = startX < window.innerWidth / 2;
+            isBrightness = startX < videoContainer.offsetWidth / 2;
             isVolume = !isBrightness;
         });
 
-        document.addEventListener('touchmove', (e) => {
+        videoContainer.addEventListener('touchmove', (e) => {
             let diffY = startY - e.touches[0].clientY;
-            let change = diffY / window.innerHeight;
+            let change = diffY / videoContainer.offsetHeight;
 
             if (isBrightness) {
                 brightness = Math.min(1, Math.max(0, brightness + change));
