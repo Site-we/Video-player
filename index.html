@@ -3,116 +3,197 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Video Player</title>
+    <title>Advanced Video Player</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f4f4f4;
             margin: 0;
-            padding: 20px;
+            background: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
+
         #video-container {
             position: relative;
+            width: 100%;
             max-width: 800px;
-            margin: auto;
-            background: black;
-            padding: 10px;
-            border-radius: 10px;
         }
+
         video {
             width: 100%;
-            border-radius: 10px;
+            display: block;
         }
-        .controls {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            background: #222;
-            padding: 10px;
-            border-radius: 5px;
-        }
-        button {
-            background: #007bff;
+
+        #playButton {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 50px;
             color: white;
+            background: rgba(0, 0, 0, 0.5);
             border: none;
-            padding: 10px;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            display: none;
+            transition: opacity 0.3s;
+        }
+
+        #seekBar {
+            width: 100%;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.7);
+            height: 5px;
             border-radius: 5px;
+            cursor: pointer;
         }
-        button:hover {
-            background: #0056b3;
+
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: space-between;
         }
-        input[type="range"] {
-            width: 100px;
+
+        .gesture-area {
+            width: 50%;
+            height: 100%;
+        }
+
+        .feedback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 10px;
+            display: none;
         }
     </style>
 </head>
 <body>
 
     <div id="video-container">
-        <video id="videoPlayer" controls>
-            Your browser does not support the video tag.
+        <video id="videoPlayer" playsinline>
+            Your browser does not support video.
         </video>
-        <div class="controls">
-            <button onclick="playPause()">Play/Pause</button>
-            <button onclick="skip(-10)"><< 10s</button>
-            <button onclick="skip(10)">10s >></button>
-            <input type="range" id="seekBar" value="0" step="1" onchange="seekVideo()">
-            <label>Speed: <select id="speedControl" onchange="changeSpeed()">
-                <option value="0.5">0.5x</option>
-                <option value="1" selected>1x</option>
-                <option value="1.5">1.5x</option>
-                <option value="2">2x</option>
-            </select></label>
-            <input type="range" id="volumeControl" min="0" max="1" step="0.1" onchange="changeVolume()">
+
+        <button id="playButton">▶</button>
+
+        <div id="controls">
+            <input type="range" id="seekBar" value="0" step="1">
         </div>
+
+        <div id="overlay">
+            <div class="gesture-area" id="brightnessControl"></div>
+            <div class="gesture-area" id="volumeControl"></div>
+        </div>
+
+        <div id="feedback" class="feedback"></div>
     </div>
 
     <script>
         const video = document.getElementById('videoPlayer');
+        const playButton = document.getElementById('playButton');
         const seekBar = document.getElementById('seekBar');
+        const controls = document.getElementById('controls');
+        const brightnessControl = document.getElementById('brightnessControl');
         const volumeControl = document.getElementById('volumeControl');
+        const feedback = document.getElementById('feedback');
 
         function getVideoUrl() {
             const urlParams = new URLSearchParams(window.location.search);
             return urlParams.get('video') || '';
         }
 
-        function playPause() {
+        video.src = getVideoUrl();
+        
+        playButton.addEventListener('click', () => {
             if (video.paused) {
                 video.play();
+                playButton.style.display = 'none';
             } else {
                 video.pause();
+                playButton.style.display = 'flex';
             }
-        }
+        });
 
-        function skip(seconds) {
-            video.currentTime += seconds;
-        }
-
-        function seekVideo() {
-            video.currentTime = seekBar.value;
-        }
-
-        function changeSpeed() {
-            video.playbackRate = document.getElementById('speedControl').value;
-        }
-
-        function changeVolume() {
-            video.volume = volumeControl.value;
-        }
+        video.addEventListener('play', () => playButton.style.display = 'none');
+        video.addEventListener('pause', () => playButton.style.display = 'flex');
 
         video.addEventListener('timeupdate', () => {
             seekBar.value = video.currentTime;
             seekBar.max = video.duration;
         });
 
-        const videoUrl = getVideoUrl();
-        if (videoUrl) {
-            video.src = videoUrl;
-        } else {
-            alert('No video URL provided in query.');
+        seekBar.addEventListener('input', () => {
+            video.currentTime = seekBar.value;
+        });
+
+        let controlTimeout;
+        video.addEventListener('click', () => {
+            controls.style.display = 'block';
+            clearTimeout(controlTimeout);
+            controlTimeout = setTimeout(() => {
+                controls.style.display = 'none';
+            }, 3000);
+        });
+
+        let startY, startX;
+        let isBrightness = false;
+        let isVolume = false;
+        let brightness = 1; 
+        let volume = video.volume;
+
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+            startX = e.touches[0].clientX;
+            isBrightness = startX < window.innerWidth / 2;
+            isVolume = !isBrightness;
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            let diffY = startY - e.touches[0].clientY;
+            let change = diffY / window.innerHeight;
+
+            if (isBrightness) {
+                brightness = Math.min(1, Math.max(0, brightness + change));
+                document.body.style.filter = `brightness(${brightness})`;
+                showFeedback(`Brightness: ${(brightness * 100).toFixed(0)}%`);
+            } else if (isVolume) {
+                volume = Math.min(1, Math.max(0, volume + change));
+                video.volume = volume;
+                showFeedback(`Volume: ${(volume * 100).toFixed(0)}%`);
+            }
+        });
+
+        function showFeedback(text) {
+            feedback.innerText = text;
+            feedback.style.display = 'block';
+            setTimeout(() => {
+                feedback.style.display = 'none';
+            }, 1000);
         }
     </script>
 
