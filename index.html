@@ -164,6 +164,7 @@
             seekBar.max = video.duration;
         });
 
+        // Seekbar tapping and swiping
         seekBar.addEventListener('input', (e) => {
             e.stopPropagation(); // Prevents touch move from interfering
             video.currentTime = seekBar.value;
@@ -191,7 +192,7 @@
         let isVolume = false;
         let brightness = 1;
         let volume = video.volume;
-        let gestureThreshold = 30; // Adjusted sensitivity
+        let gestureThreshold = 50; // Adjusted sensitivity
 
         videoContainer.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
@@ -226,6 +227,22 @@
                 feedback.style.display = 'none';
             }, 1000);
         }
+
+        // Long press to play at 2x speed
+        let speedTimeout;
+        videoContainer.addEventListener('touchstart', (e) => {
+            speedTimeout = setTimeout(() => {
+                video.playbackRate = 2.0;
+                showFeedback("Speed: 2x");
+            }, 500);
+        });
+
+        videoContainer.addEventListener('touchend', () => {
+            clearTimeout(speedTimeout);
+            video.playbackRate = 1.0;
+            showFeedback("Speed: 1x");
+        });
+
     </script>
 
 </body>
