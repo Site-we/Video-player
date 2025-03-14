@@ -164,7 +164,8 @@
             seekBar.max = video.duration;
         });
 
-        seekBar.addEventListener('input', () => {
+        seekBar.addEventListener('input', (e) => {
+            e.stopPropagation(); // Prevents touch move from interfering
             video.currentTime = seekBar.value;
         });
 
@@ -190,6 +191,7 @@
         let isVolume = false;
         let brightness = 1;
         let volume = video.volume;
+        let gestureThreshold = 30; // Adjusted sensitivity
 
         videoContainer.addEventListener('touchstart', (e) => {
             startY = e.touches[0].clientY;
@@ -200,14 +202,18 @@
 
         videoContainer.addEventListener('touchmove', (e) => {
             let diffY = startY - e.touches[0].clientY;
+
+            // If swipe is smaller than threshold, ignore
+            if (Math.abs(diffY) < gestureThreshold) return;
+
             let change = diffY / videoContainer.offsetHeight;
 
             if (isBrightness) {
-                brightness = Math.min(1, Math.max(0, brightness + change));
+                brightness = Math.min(1, Math.max(0, brightness + change * 0.3));
                 document.body.style.filter = `brightness(${brightness})`;
                 showFeedback(`Brightness: ${(brightness * 100).toFixed(0)}%`);
             } else if (isVolume) {
-                volume = Math.min(1, Math.max(0, volume + change));
+                volume = Math.min(1, Math.max(0, volume + change * 0.3));
                 video.volume = volume;
                 showFeedback(`Volume: ${(volume * 100).toFixed(0)}%`);
             }
